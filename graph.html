@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+    crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="style.css">
+  <title>AraCactus</title>
+</head>
+
+<style>
+  canvas{
+    background-color: black;
+    margin-top: 1rem;
+  }
+</style>
+
+<body class="min-vh-100 overflow-auto">
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-transparent">
+    <div class="container">
+      <!-- Logo -->
+      <!-- Logo -->
+      <a class="navbar-brand fs-4" href="#"><img src="img/logoaracactus.png" alt="logo"></a>
+      <!-- Toggle Btn-->
+      <button class="navbar-toggler shadow-none border-0" type="button" data-bs-toggle="offcanvas"
+        data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <!-- SideBar -->
+      <div class="sidebar offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar"
+        aria-labelledby="offcanvasNavbarLabel">
+
+        <!-- Sidebar Header -->
+        <div class="offcanvas-header text-white border-bottom">
+          <h5 class="offcanvas-title" id="offcanvasNavbarLabel">AraCactus Dashboard</h5>
+          <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="offcanvas"
+            aria-label="Close"></button>
+        </div>
+
+        <!-- Sidebar Body -->
+        <div class="offcanvas-body d-flex flex-column flex-lg-row p-4">
+          <ul class="navbar-nav justify-content-center align-items-center  flex-grow-1 pe-3">
+            <li class="nav-item">
+              <a class="nav-link" href="index.html">Sensor Dashboard</a>
+            </li>
+
+            <li class="nav-item mx-2">
+              <a class="nav-link" href="relay.html">Relay Dashboard</a>
+            </li>
+
+            <li class="nav-item mx-2">
+              <a class="nav-link active" aria-current="page" href="#">Graph Dashboard</a>
+            </li>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <h1 class="text-center text-white">Graph Dashboard</h1>
+<div class="container">
+  <div id="chartsContainer">
+    <canvas id="voltageChart"></canvas>
+    <canvas id="temperatureHumidityChart"></canvas>
+    <canvas id="pressureChart"></canvas>
+  </div>
+</div>
+  
+
+
+
+  </div>
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+    integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
+
+  <!-- Bootstrap JavaScript Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+    crossorigin="anonymous"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+    integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
+    crossorigin="anonymous"></script>
+
+  <script>
+
+    $(document).ready(function () {
+      Chart.register(ChartDataLabels);
+
+      // Function to format timestamps using Moment.js
+      function formatTimestamp(timestamp) {
+        return moment(timestamp).format('HH II');
+      }
+      setInterval(renderCharts,10000)
+      renderCharts()
+    })
+    function getchart() {
+      $.get("https://glowcube.io:8080/measurements", function (jsonData) {
+        const voltageData = jsonData.voltage1 || [];
+        const temperatureData = jsonData.temp1 || [];
+        const humidityData = jsonData.humid1 || [];
+        const pressureData = jsonData.pressure1 || [];
+
+        // Extract timestamps from the data and format them
+        const voltageTimestamps = voltageData.map(voltage1 => voltage1.ts);
+        const temperatureHumidityTimestamps = temperatureData.map(temp1 => temp1.ts);
+        console.log(voltageTimestamps)
+        // Extract values for voltage, temperature, and humidity from the data
+        const voltageValues = voltageData.map(voltage1 => voltage1.v);
+        const temperatureValues = temperatureData.map(temp1 => temp1.v);
+        const humidityValues = humidityData.map(humid1 => humid1.v);
+        const pressureValues = pressureData.map(pressure1 => pressure1.v);
+
+        // Create voltage chart
+        voltageChart = new Chart(document.getElementById('voltageChart'), {
+          type: 'line',
+          data: {
+            labels: voltageTimestamps,
+            datasets: [{
+              label: 'Voltage',
+              data: voltageValues,
+              fill: false,
+              borderColor: 'blue'
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                display: false
+              },
+              title: {
+                display: true,
+                text: 'แบตเตอรี่โซล่าร์เซลล์ลูกเล็ก'
+              },
+              datalabels: {
+                display: false,
+                color: 'black',
+                font: {
+                  weight: 'bold'
+                }
+              }
+            },
+            scales: {
+              x: {
+                type: 'time',
+                time: {
+                  parser: 'timestamp',
+                  unit: 'minute',
+                  displayFormats: {
+                    day: 'HH II'
+                  }
+                },
+                ticks: {
+                  source: 'labels'
+                }
+              },
+              y: {
+                beginAtZero: false,
+                suggestedMin: 10,
+                suggestedMax: Math.max(...voltageValues) + 1
+              }
+            }
+          }
+        });
+
+
+        // Create temperature and humidity chart
+        temperatureHumidityChart = new Chart(document.getElementById('temperatureHumidityChart'), {
+          type: 'line',
+          data: {
+            labels: temperatureHumidityTimestamps,
+            datasets: [{
+              label: 'Temperature',
+              data: temperatureValues,
+              fill: false,
+              borderColor: 'red'
+            }, {
+              label: 'Humidity',
+              data: humidityValues,
+              fill: false,
+              borderColor: 'green'
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                display: false
+              },
+              title: {
+                display: true,
+                text: 'ความชิ้นและอุณหภูมิโรงเรือนไม้ใบ'
+              },
+              datalabels: {
+                display: false,
+                color: 'black',
+                font: {
+                  weight: 'bold'
+                }
+              }
+            },
+            scales: {
+              x: {
+                type: 'time',
+                time: {
+                  parser: 'timestamp',
+                  unit: 'minute',
+                  displayFormats: {
+                    day: 'HH:II'
+                  }
+                },
+                ticks: {
+                  source: 'labels'
+                }
+              },
+              y: {
+                beginAtZero: true,
+                suggestedMax: Math.max(...temperatureValues, ...humidityValues) + 5
+              }
+            }
+          }
+        });
+
+        // Create voltage chart
+        pressureChart = new Chart(document.getElementById('pressureChart'), {
+          type: 'line',
+          data: {
+            labels: voltageTimestamps,
+            datasets: [{
+              label: 'Pressure',
+              data: pressureValues,
+              fill: false,
+              borderColor: 'purple'
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                display: false
+              },
+              title: {
+                display: true,
+                text: 'ความดันอากาศ (mmHg)'
+              },
+              datalabels: {
+                display: false,
+                color: 'black',
+                font: {
+                  weight: 'bold'
+                }
+              }
+            },
+            scales: {
+              x: {
+                type: 'time',
+                time: {
+                  parser: 'timestamp',
+                  unit: 'minute',
+                  displayFormats: {
+                    day: 'HH II'
+                  }
+                },
+                ticks: {
+                  source: 'labels'
+                }
+              },
+              y: {
+                beginAtZero: false,
+                suggestedMin: Math.min(...pressureValues) - 10,
+                suggestedMax: Math.max(...pressureValues) + 10
+              }
+            }
+          }
+        });
+
+
+
+      });
+    }
+
+
+    function renderCharts() {
+
+      getchart();
+    }
+  </script>
+
+</body>
+
+</html>
